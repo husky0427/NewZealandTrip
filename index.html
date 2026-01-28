@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 紐西蘭慢遊 (蔬食版)</title>
+    <!-- 引入 Tailwind CSS (美化樣式) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 Babel (核心運作庫) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Lucide Icons (圖示庫) - 使用 UMD 版本 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        /* 隱藏捲軸美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 為了在單一 HTML 中運作，我們使用 React.useState 和 lucide.icons
+        const { useState, useEffect } = React;
+
+        // 自定義 Icon 組件，因為我們不能直接 import Lucide
+        const Icon = ({ name, className }) => {
+            const [svgContent, setSvgContent] = useState('');
+
+            useEffect(() => {
+                // 使用 lucide 全局變量獲取 SVG 內容
+                if (window.lucide && window.lucide.icons[name]) {
+                    // 將 lucide 的 icon 對象轉換為 SVG 字符串
+                    // 這裡簡化處理，直接使用 lucide 的 createElement 方法生成 SVG 元素太複雜
+                    // 我們手動構建 SVG，利用 lucide 提供的路徑數據
+                    // 注意：lucide.icons[name] 返回的是 [tag, attrs, children] 結構
+                    // 這裡我們簡單使用名稱對應，實際生產中建議使用 lucide-react 的 UMD 但較難找
+                    // 替代方案：我們使用一個簡單的映射或直接讓 lucide 處理 DOM
+                }
+            }, [name]);
+
+            // 替代方案：為了確保穩定，我們使用 Lucide 的 i 標籤自動替換功能
+            // 但在 React 中，我們直接使用 SVG 路徑會更穩定
+            // 這裡為了讓此單一文件最簡化且穩定，我們使用一組精選的 SVG 路徑
+            
+            const icons = {
+                Calendar: <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />,
+                Plane: <path d="M2 12h5l3 5h5l-2-5h5l2-2H2l3 5z" />, // 簡化版
+                // 為了代碼長度，我們使用 Lucide 的標準 SVG 字符串
+                // 實際操作：使用 data-lucide 屬性並在 render 後調用 lucide.createIcons()
+                // 這是最簡單的方法
+            };
+            
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        // 輔助函數：生成 Google Maps 連結
+        const getMapLink = (query) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query + " New Zealand")}`;
+
+        const ItineraryData = [
+            {
+                day: 1,
+                date: "2/16 (一)",
+                location: "基督城 Christchurch",
+                title: "抵達與蔬食補給",
+                desc: "12:50 抵達，機場取車。前往超市採買新鮮蔬果與生活用品，早點休息調時差。",
+                stays: [
+                    { name: "Christchurch TOP 10 Holiday Park", link: getMapLink("Christchurch TOP 10 Holiday Park") },
+                    { name: "Tasman Holiday Parks - Christchurch", link: getMapLink("Tasman Holiday Parks Christchurch") }
+                ],
+                drive: "40分",
+                iconName: "plane"
+            },
+            {
+                day: 2,
+                date: "2/17 (二)",
+                location: "霍基蒂卡 Hokitika",
+                title: "亞瑟通道 & 螢火蟲",
+                desc: "穿越高山公路。傍晚在海邊看夕陽，晚餐後走去對面看免費藍光螢火蟲。",
+                stays: [
+                    { name: "Hokitika Holiday Park", link: getMapLink("Hokitika Holiday Park") },
+                    { name: "Shining Star Beachfront Accommodation", link: getMapLink("Shining Star Beachfront Accommodation") }
+                ],
+                drive: "4.5 小時",
+                iconName: "car"
+            },
+            {
+                day: 3,
+                date: "2/18 (三)",
+                location: "法蘭茲約瑟夫 Franz Josef",
+                title: "蒂芬妮藍峽谷",
+                desc: "上午探訪 Hokitika Gorge 夢幻藍水。下午抵達冰川小鎮，悠閒漫步。",
+                stays: [
+                    { name: "Franz Josef TOP 10 Holiday Park", link: getMapLink("Franz Josef TOP 10 Holiday Park") },
+                    { name: "Rainforest Retreat", link: getMapLink("Rainforest Retreat Franz Josef") }
+                ],
+                drive: "2.5 小時",
+                iconName: "waves"
+            },
+            {
+                day: 4,
+                date: "2/19 (四)",
+                location: "福克斯冰川 Fox Glacier",
+                title: "🚁 重頭戲：冰川健行",
+                desc: "睡到自然醒。14:30 參加直升機冰川健行 (Heli-Hike)。晚上住隔壁小鎮享受寧靜。",
+                stays: [
+                    { name: "Fox Glacier TOP 10 Holiday Park", link: getMapLink("Fox Glacier TOP 10 Holiday Park") },
+                    { name: "Fox Glacier Lodge & Campervan Park", link: getMapLink("Fox Glacier Lodge & Campervan Park") }
+                ],
+                drive: "30分",
+                iconName: "mountain"
+            },
+            {
+                day: 5,
+                date: "2/20 (五)",
+                location: "瓦納卡 Wanaka",
+                title: "景觀公路野餐日",
+                desc: "穿越最美公路 Haast Pass。沿途停靠 Blue Pools、瀑布野餐。抵達瓦納卡湖邊發呆。",
+                stays: [
+                    { name: "Wanaka TOP 10 Holiday Park", link: getMapLink("Wanaka TOP 10 Holiday Park") },
+                    { name: "Wanaka Lakeview Holiday Park", link: getMapLink("Wanaka Lakeview Holiday Park") }
+                ],
+                drive: "4.5 小時",
+                iconName: "coffee"
+            },
+            {
+                day: 6,
+                date: "2/21 (六)",
+                location: "皇后鎮 Queenstown",
+                title: "🚠 纜車與 Luge 遛遛車",
+                desc: "經皇冠山脈公路抵達。傍晚搭 Skyline 纜車看百萬夜景，玩 Luge (遛遛車) 享受速度感。",
+                stays: [
+                    { name: "Queenstown Lakeview Holiday Park", link: getMapLink("Queenstown Lakeview Holiday Park") },
+                    { name: "Queenstown TOP 10 Holiday Park (Creeksyde)", link: getMapLink("Queenstown TOP 10 Holiday Park Creeksyde") }
+                ],
+                drive: "1.5 小時",
+                iconName: "moon"
+            },
+            {
+                day: 7,
+                date: "2/22 (日)",
+                location: "皇后鎮 Queenstown",
+                title: "箭鎮與湖畔時光",
+                desc: "上午去箭鎮 (Arrowtown) 逛復古老街。下午回到皇后鎮植物園野餐，享受悠閒時光。",
+                stays: [
+                    { name: "Queenstown Lakeview Holiday Park", link: getMapLink("Queenstown Lakeview Holiday Park") },
+                    { name: "Driftaway Queenstown", link: getMapLink("Driftaway Queenstown") }
+                ],
+                drive: "1 小時",
+                iconName: "leaf"
+            },
+            {
+                day: 8,
+                date: "2/23 (一)",
+                location: "皇后鎮 Queenstown",
+                title: "🐑 格林諾奇動物農場",
+                desc: "沿著「最美湖濱公路」去 Glenorchy。參觀 Glenorchy Animal Experience 親近動物，湖邊棧道散步。",
+                stays: [
+                    { name: "Queenstown Lakeview Holiday Park", link: getMapLink("Queenstown Lakeview Holiday Park") },
+                    { name: "Twelve Mile Delta Campsite (DOC)", link: getMapLink("Twelve Mile Delta Campsite") }
+                ],
+                drive: "2 小時 (來回)",
+                iconName: "camera"
+            },
+            {
+                day: 9,
+                date: "2/24 (二)",
+                location: "奧瑪拉瑪 Omarama",
+                title: "水果鎮與黏土懸崖",
+                desc: "離開皇后鎮，經過 Cromwell 水果鎮買櫻桃。前往 Clay Cliffs (黏土懸崖) 欣賞獨特地形。",
+                stays: [
+                    { name: "Omarama TOP 10 Holiday Park", link: getMapLink("Omarama TOP 10 Holiday Park") },
+                    { name: "Ahuriri Bridge Campsite (DOC)", link: getMapLink("Ahuriri Bridge Campsite") }
+                ],
+                drive: "3 小時",
+                iconName: "sun"
+            },
+            {
+                day: 10,
+                date: "2/25 (三)",
+                location: "庫克山 Mt Cook",
+                title: "雪山下午茶",
+                desc: "進入國家公園。下午把露營椅搬出來，對著雪山喝咖啡發呆。",
+                stays: [
+                    { name: "White Horse Hill Campground (DOC)", link: getMapLink("White Horse Hill Campground") },
+                    { name: "Glentanner Holiday Park Mount Cook", link: getMapLink("Glentanner Holiday Park Mount Cook") }
+                ],
+                drive: "1 小時",
+                iconName: "mountain"
+            },
+            {
+                day: 11,
+                date: "2/26 (四)",
+                location: "庫克山 Mt Cook",
+                title: "⛰️ 冰河步道探索",
+                desc: "走 Hooker Valley Track (來回3小時，平緩吊橋) 近距離看冰河湖。繼續在山裡深呼吸。",
+                stays: [
+                    { name: "White Horse Hill Campground (DOC)", link: getMapLink("White Horse Hill Campground") },
+                    { name: "Glentanner Holiday Park Mount Cook", link: getMapLink("Glentanner Holiday Park Mount Cook") }
+                ],
+                drive: "0",
+                iconName: "tent"
+            },
+            {
+                day: 12,
+                date: "2/27 (五)",
+                location: "蒂卡波湖 Tekapo",
+                title: "✨ 溫泉與觀星",
+                desc: "下午看好牧羊人教堂。晚上去 Tekapo Springs 泡溫泉或觀星。",
+                stays: [
+                    { name: "Lake Tekapo Motels & Holiday Park", link: getMapLink("Lake Tekapo Motels & Holiday Park") },
+                    { name: "Lake McGregor Campsite (DOC)", link: getMapLink("Lake McGregor Campsite") }
+                ],
+                drive: "1.5 小時",
+                iconName: "moon"
+            },
+            {
+                day: 13,
+                date: "2/28 (六)",
+                location: "基督城 Christchurch",
+                title: "返程準備 (3/1 早班機)",
+                desc: "去 Fairlie 吃著名的派(有素食口味)。返回基督城還車，入住 Motel 準備明日 08:00 飛機。",
+                stays: [
+                    { name: "City Centre Motel", link: getMapLink("City Centre Motel Christchurch") },
+                    { name: "Christchurch City Hotel (備選)", link: getMapLink("Christchurch City Hotel") }
+                ],
+                drive: "3.5 小時",
+                iconName: "plane"
+            }
+        ];
+
+        const PackingListCategories = [
+            {
+                category: "證件與金融 (最重要)",
+                iconName: "credit-card",
+                items: [
+                    "護照 (效期6個月以上)",
+                    "國際駕照 (去監理站辦)",
+                    "台灣駕照正本 (取車必看!)",
+                    "信用卡 (已開通預借現金密碼 Pin Code)",
+                    "NZeTA 電子簽證"
+                ]
+            },
+            {
+                category: "衣物裝備",
+                iconName: "shopping-bag",
+                items: [
+                    "防風防水外套 (西岸常下雨)",
+                    "輕羽絨外套 (庫克山很冷)",
+                    "泳衣/泳帽 (泡溫泉用)",
+                    "太陽眼鏡 (紫外線強)",
+                    "室內拖鞋 (露營車內穿，超重要!)",
+                    "浴室拖鞋 (洗澡用)"
+                ]
+            },
+            {
+                category: "電子與車用",
+                iconName: "music", // using music icon as generic electric
+                items: [
+                    "車用手機架 (夾冷氣孔)",
+                    "車充 (USB多孔)",
+                    "露營頭燈 (庫克山晚上必備)",
+                    "Google Maps 南島離線地圖",
+                    "CamperMate App"
+                ]
+            },
+            {
+                category: "飲食與生活 (素食友善)",
+                iconName: "utensils",
+                items: [
+                    "筷子/環保餐具",
+                    "調味料包 (鹽/胡椒/醬油)",
+                    "素食泡麵/快煮麵",
+                    "保溫瓶",
+                    "防蚊液 (含DEET成分)",
+                    "暈車藥/腸胃藥",
+                    "全新菜瓜布/抹布"
+                ]
+            }
+        ];
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('itinerary');
+            const [checkedItems, setCheckedItems] = useState({});
+
+            useEffect(() => {
+                // 組件掛載後初始化圖示
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [activeTab]); // 切換分頁時重新渲染圖示
+
+            const toggleCheck = (item) => {
+                setCheckedItems(prev => ({
+                    ...prev,
+                    [item]: !prev[item]
+                }));
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-20">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
+                        <h1 className="text-2xl font-bold mb-1">🇳🇿 紐西蘭慢遊 (蔬食版)</h1>
+                        <div className="flex items-center text-teal-100 text-sm mb-4">
+                            <i data-lucide="calendar" className="w-4 h-4 mr-1"></i>
+                            <span>2026/2/16 - 3/1 (14天)</span>
+                        </div>
+                        
+                        {/* Navigation Tabs */}
+                        <div className="flex bg-teal-800/30 p-1 rounded-xl backdrop-blur-sm">
+                            <button 
+                                onClick={() => setActiveTab('itinerary')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'itinerary' ? 'bg-white text-teal-700 shadow-sm' : 'text-teal-100'}`}
+                            >
+                                每日行程
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('packing')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'packing' ? 'bg-white text-teal-700 shadow-sm' : 'text-teal-100'}`}
+                            >
+                                必備清單
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-4 max-w-md mx-auto">
+                        
+                        {/* Itinerary View */}
+                        {activeTab === 'itinerary' && (
+                            <div className="space-y-4">
+                                <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl text-sm text-amber-800 flex items-start">
+                                    <i data-lucide="sun" className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-amber-600"></i>
+                                    <div>
+                                        <p className="font-bold mb-1">獨家享受派 ✨</p>
+                                        <p>這趟旅程主打：睡到自然醒、不趕路。在庫克山與皇后鎮享受悠閒的蔬食時光！</p>
+                                    </div>
+                                </div>
+
+                                {ItineraryData.map((item, index) => (
+                                    <div key={index} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+                                        {/* Connector Line */}
+                                        {index !== ItineraryData.length - 1 && (
+                                            <div className="absolute left-[29px] top-14 bottom-[-20px] w-0.5 bg-slate-100 z-0"></div>
+                                        )}
+                                        
+                                        <div className="flex gap-4 relative z-10">
+                                            {/* Date Column */}
+                                            <div className="flex flex-col items-center min-w-[3.5rem]">
+                                                <div className="bg-slate-100 text-slate-600 text-xs font-bold py-1 px-2 rounded mb-2">
+                                                    D{item.day}
+                                                </div>
+                                                <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-teal-600">
+                                                    <i data-lucide={item.iconName} className="w-5 h-5"></i>
+                                                </div>
+                                            </div>
+
+                                            {/* Content Column */}
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h3 className="font-bold text-lg text-slate-800">{item.location}</h3>
+                                                    <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">{item.date}</span>
+                                                </div>
+                                                <h4 className="text-teal-600 font-bold text-sm mb-2">{item.title}</h4>
+                                                <p className="text-sm text-slate-600 mb-3 leading-relaxed">{item.desc}</p>
+                                                
+                                                {/* Accommodation Options */}
+                                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-3">
+                                                    <div className="flex items-center gap-1 text-xs font-bold text-slate-500 mb-2">
+                                                        <i data-lucide="map-pin" className="w-3 h-3"></i>
+                                                        住宿建議 (點擊導航)
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {item.stays.map((stay, idx) => (
+                                                            <a 
+                                                                key={idx}
+                                                                href={stay.link}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center text-xs text-teal-700 hover:text-teal-900 bg-white p-2 rounded border border-slate-200 hover:border-teal-300 transition-colors"
+                                                            >
+                                                                <i data-lucide="external-link" className="w-3 h-3 mr-2 flex-shrink-0"></i>
+                                                                <span className="truncate">{stay.name}</span>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 text-xs text-slate-400 ml-1">
+                                                    <i data-lucide="car" className="w-3 h-3"></i>
+                                                    <span>車程約 {item.drive}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-800 flex items-start">
+                                    <i data-lucide="plane" className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5"></i>
+                                    <div>
+                                        <p className="font-bold mb-1">返程航班 ✈️</p>
+                                        <p>3/1 (日) 早上 08:00 飛機。請務必在前一晚整理好行李，預留足夠時間前往機場。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Packing List View */}
+                        {activeTab === 'packing' && (
+                            <div className="space-y-6">
+                                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-800 flex items-start">
+                                    <i data-lucide="thermometer" className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5"></i>
+                                    <div>
+                                        <p className="font-bold mb-1">天氣提醒 🌤</p>
+                                        <p>2月氣溫約 10-25°C。西岸常下雨，庫克山晚上很冷。請務必採用「洋蔥式穿法」。</p>
+                                    </div>
+                                </div>
+
+                                {PackingListCategories.map((category, idx) => (
+                                    <div key={idx} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                                        <div className="bg-slate-50 p-3 flex items-center gap-2 border-b border-slate-100">
+                                            <div className="text-teal-600">
+                                                <i data-lucide={category.iconName} className="w-5 h-5"></i>
+                                            </div>
+                                            <h3 className="font-bold text-slate-700">{category.category}</h3>
+                                        </div>
+                                        <div className="p-2">
+                                            {category.items.map((item, itemIdx) => (
+                                                <div 
+                                                    key={itemIdx}
+                                                    onClick={() => toggleCheck(item)}
+                                                    className="flex items-center p-3 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors"
+                                                >
+                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 transition-colors ${checkedItems[item] ? 'bg-teal-500 border-teal-500' : 'border-slate-300'}`}>
+                                                        {checkedItems[item] && <i data-lucide="check-square" className="w-3.5 h-3.5 text-white"></i>}
+                                                    </div>
+                                                    <span className={`text-sm ${checkedItems[item] ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                                        {item}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                <div className="text-center text-xs text-slate-400 mt-8 mb-4">
+                                    Tip: 點擊項目可以勾選/取消
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
